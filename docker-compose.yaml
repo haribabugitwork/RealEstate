@@ -1,0 +1,85 @@
+# docker-compose.yml
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: mern-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: secret
+    ports:
+      - "27017:27017"
+
+  auth:
+    build: ./services/auth
+    env_file:
+      - ./services/auth/.env
+    ports:
+      - "3001:3000"
+    depends_on:
+      - mongo
+
+  property:
+    build: ./services/property
+    env_file:
+      - ./services/property/.env
+    ports:
+      - "3002:3000"
+    depends_on:
+      - mongo
+
+  allocation:
+    build: ./services/allocation
+    env_file:
+      - ./services/allocation/.env
+    ports:
+      - "3003:3000"
+    depends_on:
+      - mongo
+
+  payments:
+    build: ./services/payments
+    env_file:
+      - ./services/payments/.env
+    ports:
+      - "3004:3000"
+    depends_on:
+      - mongo
+
+  complaints:
+    build: ./services/complaints
+    env_file:
+      - ./services/complaints/.env
+    ports:
+      - "3005:3000"
+    depends_on:
+      - mongo
+
+  company:
+    build: ./services/company
+    env_file:
+      - ./services/company/.env
+    ports:
+      - "3006:3000"
+    depends_on:
+      - mongo
+
+  gateway:
+    build: ./services/gateway
+    env_file:
+      - ./services/gateway/.env
+    ports:
+      - "9000:3000"
+    depends_on:
+      - auth
+      - property
+      - allocation
+      - payments
+      - complaints
+      - company
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - gateway
