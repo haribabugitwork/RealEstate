@@ -6,7 +6,7 @@ const CSVUploader = () => {
   const [status, setStatus] = useState('');
 
   const handleSubmit = async (e) => {
-    console.log('Making API request to: /property/properties/seed-csv');
+    console.log('Making API request to: /property/properties/bulk-upload');
     e.preventDefault();
     if (!file) return;
 
@@ -15,10 +15,10 @@ const CSVUploader = () => {
 
     try {
       setStatus('Uploading...');
-      console.log('Making API request to: /property/properties/seed-csv');
+      console.log('Making API request to: /property/properties/bulk-upload');
       
       // Use your configured axios instance and remove the Content-Type header
-      const res = await axiosInstance.post('/property/properties/seed-csv', formData, {
+      const res = await axiosInstance.post('/property/properties/bulk-upload', formData, {
         headers: { 
           'Content-Type': undefined // Let browser set the boundary automatically
         },

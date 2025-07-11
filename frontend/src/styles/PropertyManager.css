@@ -1,0 +1,141 @@
+/* PropertyManager.css */
+.property-manager {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.property-manager-header {
+  margin-bottom: 30px;
+}
+
+.property-manager-header h2 {
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.tab-navigation {
+  display: flex;
+  gap: 10px;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 10px;
+}
+
+.tab-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background-color: #ffffff;
+  border: 2px solid #dee2e6;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  color: #6c757d;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.tab-button:hover {
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
+  color: #495057;
+}
+
+.tab-button.active {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: #ffffff;
+  transform: translateY(2px);
+}
+
+.tab-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #007bff;
+}
+
+.tab-icon {
+  font-size: 18px;
+}
+
+.tab-content {
+  background-color: #ffffff;
+  border-radius: 0 8px 8px 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.tab-panel {
+  padding: 30px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panel-header {
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.panel-header h3 {
+  color: #333;
+  margin-bottom: 8px;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.panel-header p {
+  color: #6c757d;
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .property-manager {
+    padding: 15px;
+  }
+  
+  .tab-navigation {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .tab-button {
+    padding: 10px 16px;
+    font-size: 14px;
+    border-radius: 8px;
+  }
+  
+  .tab-button.active {
+    transform: none;
+  }
+  
+  .tab-content {
+    border-radius: 8px;
+  }
+  
+  .tab-panel {
+    padding: 20px;
+  }
+}
