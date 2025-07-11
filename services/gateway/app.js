@@ -16,17 +16,37 @@ app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 app.use(cors());
 app.options('*', cors());
 
-// JSON body parsing & rate limit
-// app.use(express.json());
+// JSON body parsing - but exclude multipart/form-data
+app.use((req, res, next) => {
+  const contentType = req.headers['content-type'] || '';
+  if (contentType.startsWith('multipart/form-data')) {
+    // Skip JSON parsing for file uploads
+    return next();
+  }
+  express.json()(req, res, next);
+});
+
+// Rate limiting (uncomment if needed)
 // app.use(rateLimit({ windowMs: 60_000, max: 60 }));
 
 // Request logging middleware
 app.use((req, res, next) => {
+  const contentType = req.headers['content-type'] || '';
+
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   console.log('Headers:', req.headers);
-  if (req.body && Object.keys(req.body).length > 0) {
+
+  // Log body only if it's a JSON-based request
+  if (
+    contentType.includes('application/json') &&
+    req.body &&
+    Object.keys(req.body).length > 0
+  ) {
     console.log('Body:', JSON.stringify(req.body));
+  } else if (contentType.startsWith('multipart/form-data')) {
+    console.log('Body: [Multipart form data - not logged]');
   }
+
   next();
 });
 
@@ -59,16 +79,16 @@ console.log('PAYMENTS_SERVICE_URL:', PAY_URL);
 console.log('COMPLAINTS_SERVICE_URL:', COMP_URL);
 console.log('COMPANY_SERVICE_URL:', COMPANY_URL);
 
-// Enhanced proxy options with both timeout and proxyTimeout
+// Enhanced proxy options with file upload support
 const createProxyOptions = (target, pathRewrite, routeName) => ({
   target,
   changeOrigin: true,
   pathRewrite,
   logLevel: 'debug',
-  timeout: 30000,        // Client timeout (30 seconds)
-  proxyTimeout: 30000,   // Proxy timeout (30 seconds) - This was missing!
-  followRedirects: false, // Prevent redirect loops
-  secure: false,         // Allow self-signed certificates if needed
+  timeout: 30000,
+  proxyTimeout: 30000,
+  followRedirects: false,
+  secure: false,
   onError: (err, req, res) => {
     console.error(`[${routeName}] Proxy error:`, err.message);
     console.error(`[${routeName}] Target URL:`, target);
@@ -86,14 +106,24 @@ const createProxyOptions = (target, pathRewrite, routeName) => ({
   },
   onProxyReq: (proxyReq, req, res) => {
     console.log(`[${routeName}] Proxying ${req.method} ${req.url} to ${target}${proxyReq.path}`);
-    
-    // Set additional headers to prevent timeouts
+
     proxyReq.setHeader('Connection', 'keep-alive');
     proxyReq.setHeader('Keep-Alive', 'timeout=30, max=100');
+
+    // Handle different content types properly
+    const contentType = req.headers['content-type'] || '';
     
-    // Handle body data properly for POST requests
-    if (req.body && (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH')) {
+    if (contentType.startsWith('multipart/form-data')) {
+      // For file uploads, don't modify the body at all
+      // Let the proxy handle the streaming automatically
+      console.log(`[${routeName}] Multipart form data detected - letting proxy handle body streaming`);
+      return;
+    }
+
+    // Handle JSON body for other request types
+    if (req.body && ['POST', 'PUT', 'PATCH'].includes(req.method) && typeof req.body === 'object') {
       const bodyData = JSON.stringify(req.body);
+      proxyReq.setHeader('Content-Type', 'application/json');
       proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
       proxyReq.write(bodyData);
     }
@@ -130,7 +160,7 @@ app.use('/api/auth',
   createProxyMiddleware(createProxyOptions(AUTH_URL, { '^/api/auth': '/auth' }, 'AUTH_PROTECTED'))
 );
 
-// 3) Property
+// 3) Property (supports file uploads)
 app.use('/api/property',
   authenticate,
   createProxyMiddleware(createProxyOptions(PROPERTY_URL, { '^/api/property': '' }, 'PROPERTY'))
@@ -183,7 +213,7 @@ app.listen(PORT, () => {
   console.log('  POST /api/auth/login');
   console.log('  POST /api/auth/refresh');
   console.log('  * /api/auth/* (protected)');
-  console.log('  * /api/property/* (protected)');
+  console.log('  * /api/property/* (protected) - supports file uploads');
   console.log('  * /api/allocation/* (protected)');
   console.log('  * /api/payments/* (protected)');
   console.log('  * /api/complaints/* (protected)');

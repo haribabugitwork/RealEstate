@@ -2,6 +2,9 @@
 import express from 'express';
 import Property from '../models/Property.js';
 import { authenticate, authorize } from '../middleware/auth.js';
+import multer from 'multer';
+import csvParser from 'csv-parser';
+import fs from 'fs';
 
 const router = express.Router();
 
@@ -94,6 +97,49 @@ router.delete('/:id', authorize('Owner', 'Agent'), async (req, res) => {
     console.error('❌ Error deleting property:', error);
     res.status(500).json({ error: 'Server error' });
   }
+});
+
+const upload = multer({ dest: 'uploads/' });
+
+// POST /properties/seed-csv
+router.post('/seed-csv', authorize('Owner', 'Agent'), upload.single('csvFile'), async (req, res) => {
+  console.log('📥 POST /properties/seed-csv route hit');
+  console.log('📁 Uploaded file:', req.file);
+
+  const filePath = req.file.path;
+  const results = [];
+
+  fs.createReadStream(filePath)
+    .pipe(csvParser())
+    .on('data', (row) => {
+      results.push({
+        name: row.name,
+        location: {
+          address: row.address,
+          coords: {
+            lat: parseFloat(row.lat),
+            lng: parseFloat(row.lng)
+          }
+        },
+        status: row.status || 'available',
+        vacancyDate: row.vacancyDate ? new Date(row.vacancyDate) : null
+      });
+    })
+    .on('end', async () => {
+      try {
+        const inserted = await Property.insertMany(results);
+        console.log(`✅ Inserted ${inserted.length} properties`);
+        fs.unlinkSync(filePath);
+        res.json({ message: `✅ Seeded ${inserted.length} properties.` });
+      } catch (error) {
+        console.error('❌ Failed to insert CSV data:', error);
+        res.status(500).json({ error: 'Server error during CSV insert' });
+      }
+    })
+    .on('error', (error) => {
+      console.error('❌ CSV Parse error:', error);
+      res.status(500).json({ error: 'Failed to parse CSV file' });
+    });
 });
 
 export default router;
