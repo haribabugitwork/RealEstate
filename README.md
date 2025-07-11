@@ -78,6 +78,18 @@ The system will handle tenants, property managers/agents, and property owners. I
 
 ## 🧪 Development Setup
 
+### ✅ 1. Prerequisites
+
+- **Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)**
+  - Available for Windows, macOS, and Linux
+  - After installation, ensure Docker Desktop is **running** and `docker compose` is available
+
+You can verify installation by running:
+
+```bash
+docker --version
+docker compose version
+
 ```bash
 # Clone this repository
 git clone https://github.com/haribabugitwork/RealEstate.git
