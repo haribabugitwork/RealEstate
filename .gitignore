@@ -1,0 +1,32 @@
+# Ignore system files
+.DS_Store
+
+# Ignore top-level dependencies
+/node_modules/
+/package-lock.json
+/package.json
+
+# Ignore all node_modules across the monorepo
+**/node_modules/
+
+/*.log
+
+# Ignore frontend-specific build and dependencies
+/frontend/node_modules/
+/frontend/package-lock.json
+/frontend/package.json
+
+# Ignore temporary or untracked local config/files
+frontend/.DS_Store
+frontend/src/.DS_Store
+frontend/build/
+
+# Ignore environment files (optional)
+.env
+*.env
+
+# Ignore compiled files or coverage (optional)
+dist/
+build/
+coverage/
+
