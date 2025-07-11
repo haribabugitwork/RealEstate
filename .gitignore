@@ -3,8 +3,6 @@
 
 # Ignore top-level dependencies
 /node_modules/
-/package-lock.json
-/package.json
 
 # Ignore all node_modules across the monorepo
 **/node_modules/
@@ -13,8 +11,6 @@
 
 # Ignore frontend-specific build and dependencies
 /frontend/node_modules/
-/frontend/package-lock.json
-/frontend/package.json
 
 # Ignore temporary or untracked local config/files
 frontend/.DS_Store
