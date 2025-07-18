@@ -1,0 +1,564 @@
+import React, { useState } from 'react';
+import { Home, MapPin, DollarSign, Calendar, User, Phone, Mail, ChevronLeft, ChevronRight } from 'lucide-react';
+
+const PropertyStatusTabs = () => {
+  const [activeTab, setActiveTab] = useState('available');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6; // Show 6 properties per page
+
+  // Extended property data with more properties
+  const properties = {
+    available: [
+      {
+        id: 1,
+        title: "Modern Downtown Apartment",
+        address: "123 Main Street, Downtown",
+        price: "$1,200/month",
+        type: "Apartment",
+        bedrooms: 2,
+        bathrooms: 2,
+        area: "850 sq ft",
+        features: ["Parking", "Gym", "Pool", "Pet Friendly"],
+        description: "Beautiful modern apartment with city views and premium amenities.",
+        images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 2,
+        title: "Cozy Suburban House",
+        address: "456 Oak Avenue, Suburbs",
+        price: "$2,500/month",
+        type: "House",
+        bedrooms: 3,
+        bathrooms: 2,
+        area: "1,200 sq ft",
+        features: ["Garden", "Garage", "Fireplace"],
+        description: "Charming house with a beautiful garden and quiet neighborhood.",
+        images: ["https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 3,
+        title: "Studio Loft",
+        address: "789 Art District, Creative Quarter",
+        price: "$800/month",
+        type: "Studio",
+        bedrooms: 1,
+        bathrooms: 1,
+        area: "500 sq ft",
+        features: ["High Ceilings", "Exposed Brick", "Natural Light"],
+        description: "Artistic studio loft perfect for creative professionals.",
+        images: ["https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 6,
+        title: "Beachfront Condo",
+        address: "101 Ocean Drive, Coastal",
+        price: "$1,800/month",
+        type: "Condo",
+        bedrooms: 2,
+        bathrooms: 2,
+        area: "950 sq ft",
+        features: ["Beach Access", "Pool", "Balcony", "Ocean View"],
+        description: "Stunning beachfront condo with panoramic ocean views.",
+        images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 7,
+        title: "Mountain Cabin",
+        address: "567 Pine Trail, Mountain View",
+        price: "$1,500/month",
+        type: "Cabin",
+        bedrooms: 3,
+        bathrooms: 2,
+        area: "1,100 sq ft",
+        features: ["Fireplace", "Deck", "Mountain View", "Hiking Trails"],
+        description: "Peaceful mountain retreat with stunning natural surroundings.",
+        images: ["https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 8,
+        title: "Urban Loft",
+        address: "234 Industrial Blvd, Arts District",
+        price: "$1,400/month",
+        type: "Loft",
+        bedrooms: 2,
+        bathrooms: 1,
+        area: "1,000 sq ft",
+        features: ["High Ceilings", "Exposed Brick", "Skylights", "Art Gallery"],
+        description: "Converted warehouse loft in the heart of the arts district.",
+        images: ["https://images.unsplash.com/photo-1484154218962-a197022b5858?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 9,
+        title: "Luxury Villa",
+        address: "890 Hillside Drive, Exclusive Hills",
+        price: "$4,500/month",
+        type: "Villa",
+        bedrooms: 5,
+        bathrooms: 4,
+        area: "3,200 sq ft",
+        features: ["Pool", "Garden", "Garage", "City View", "Security"],
+        description: "Magnificent luxury villa with premium amenities and breathtaking views.",
+        images: ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 10,
+        title: "Townhouse Central",
+        address: "345 Central Park, Midtown",
+        price: "$2,200/month",
+        type: "Townhouse",
+        bedrooms: 3,
+        bathrooms: 3,
+        area: "1,500 sq ft",
+        features: ["Patio", "Parking", "Near Transit", "Updated Kitchen"],
+        description: "Modern townhouse in prime location with easy access to downtown.",
+        images: ["https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 11,
+        title: "Garden Apartment",
+        address: "678 Rose Street, Garden District",
+        price: "$1,100/month",
+        type: "Apartment",
+        bedrooms: 1,
+        bathrooms: 1,
+        area: "650 sq ft",
+        features: ["Garden View", "Laundry", "Pet Friendly", "Quiet"],
+        description: "Charming garden apartment in peaceful residential area.",
+        images: ["https://images.unsplash.com/photo-1554995207-c18c203602cb?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 12,
+        title: "Riverside Cottage",
+        address: "123 River Lane, Riverside",
+        price: "$1,300/month",
+        type: "Cottage",
+        bedrooms: 2,
+        bathrooms: 1,
+        area: "800 sq ft",
+        features: ["River View", "Dock", "Garden", "Fireplace"],
+        description: "Quaint cottage by the river with private dock access.",
+        images: ["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 13,
+        title: "City Penthouse",
+        address: "999 Tower Street, Financial District",
+        price: "$3,800/month",
+        type: "Penthouse",
+        bedrooms: 3,
+        bathrooms: 3,
+        area: "2,000 sq ft",
+        features: ["Rooftop", "City View", "Concierge", "Gym"],
+        description: "Luxurious penthouse with stunning city skyline views.",
+        images: ["https://images.unsplash.com/photo-1613977257363-707ba9348227?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 14,
+        title: "Suburban Ranch",
+        address: "456 Meadow Lane, Suburbia",
+        price: "$2,000/month",
+        type: "House",
+        bedrooms: 4,
+        bathrooms: 2,
+        area: "1,800 sq ft",
+        features: ["Large Yard", "Garage", "Family Room", "School District"],
+        description: "Spacious ranch-style home perfect for families.",
+        images: ["https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=400&h=300&fit=crop"]
+      }
+    ],
+    rented: [
+      {
+        id: 4,
+        title: "Luxury Penthouse",
+        address: "321 Skyline Drive, Uptown",
+        price: "$3,500/month",
+        type: "Penthouse",
+        bedrooms: 3,
+        bathrooms: 3,
+        area: "1,800 sq ft",
+        features: ["Rooftop Terrace", "Concierge", "City Views"],
+        description: "Stunning penthouse with panoramic city views and luxury amenities.",
+        tenant: {
+          name: "John Smith",
+          phone: "(555) 123-4567",
+          email: "john.smith@email.com",
+          leaseStart: "2024-01-15",
+          leaseEnd: "2024-12-31"
+        },
+        images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 5,
+        title: "Family Home",
+        address: "654 Elm Street, Family District",
+        price: "$2,800/month",
+        type: "House",
+        bedrooms: 4,
+        bathrooms: 3,
+        area: "2,000 sq ft",
+        features: ["Backyard", "School District", "2-Car Garage"],
+        description: "Perfect family home in excellent school district with large backyard.",
+        tenant: {
+          name: "Sarah Johnson",
+          phone: "(555) 987-6543",
+          email: "sarah.johnson@email.com",
+          leaseStart: "2024-03-01",
+          leaseEnd: "2025-02-28"
+        },
+        images: ["https://images.unsplash.com/photo-1558618666-fbd19c4cd7c7?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 15,
+        title: "Downtown Condo",
+        address: "789 Business Plaza, Downtown",
+        price: "$1,600/month",
+        type: "Condo",
+        bedrooms: 2,
+        bathrooms: 2,
+        area: "900 sq ft",
+        features: ["Gym", "Pool", "Concierge", "Parking"],
+        description: "Modern condo in the heart of downtown business district.",
+        tenant: {
+          name: "Michael Chen",
+          phone: "(555) 456-7890",
+          email: "m.chen@email.com",
+          leaseStart: "2024-02-01",
+          leaseEnd: "2025-01-31"
+        },
+        images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 16,
+        title: "Lakeside Apartment",
+        address: "321 Lake View Drive, Lakeside",
+        price: "$1,400/month",
+        type: "Apartment",
+        bedrooms: 2,
+        bathrooms: 1,
+        area: "750 sq ft",
+        features: ["Lake View", "Balcony", "Swimming Pool", "Fitness Center"],
+        description: "Beautiful apartment overlooking the lake with resort-style amenities.",
+        tenant: {
+          name: "Emily Rodriguez",
+          phone: "(555) 234-5678",
+          email: "emily.r@email.com",
+          leaseStart: "2024-04-01",
+          leaseEnd: "2025-03-31"
+        },
+        images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 17,
+        title: "Historic Brownstone",
+        address: "567 Heritage Street, Old Town",
+        price: "$2,400/month",
+        type: "Townhouse",
+        bedrooms: 3,
+        bathrooms: 2,
+        area: "1,600 sq ft",
+        features: ["Historic Character", "Hardwood Floors", "Garden", "Parking"],
+        description: "Beautifully restored historic brownstone with original architectural details.",
+        tenant: {
+          name: "David Wilson",
+          phone: "(555) 345-6789",
+          email: "d.wilson@email.com",
+          leaseStart: "2024-01-01",
+          leaseEnd: "2024-12-31"
+        },
+        images: ["https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 18,
+        title: "Modern Studio",
+        address: "890 Tech Boulevard, Innovation District",
+        price: "$1,200/month",
+        type: "Studio",
+        bedrooms: 1,
+        bathrooms: 1,
+        area: "550 sq ft",
+        features: ["Smart Home", "High-Speed Internet", "Gym", "Rooftop Deck"],
+        description: "Ultra-modern studio apartment with smart home technology.",
+        tenant: {
+          name: "Lisa Park",
+          phone: "(555) 567-8901",
+          email: "lisa.park@email.com",
+          leaseStart: "2024-03-15",
+          leaseEnd: "2025-03-14"
+        },
+        images: ["https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 19,
+        title: "Luxury Apartment",
+        address: "234 Premium Drive, Upscale District",
+        price: "$2,600/month",
+        type: "Apartment",
+        bedrooms: 3,
+        bathrooms: 2,
+        area: "1,400 sq ft",
+        features: ["Marble Counters", "Stainless Appliances", "Balcony", "Valet"],
+        description: "Sophisticated luxury apartment with premium finishes and amenities.",
+        tenant: {
+          name: "Robert Taylor",
+          phone: "(555) 678-9012",
+          email: "r.taylor@email.com",
+          leaseStart: "2024-02-15",
+          leaseEnd: "2025-02-14"
+        },
+        images: ["https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=300&fit=crop"]
+      },
+      {
+        id: 20,
+        title: "Coastal Bungalow",
+        address: "456 Seaside Avenue, Beach Town",
+        price: "$1,900/month",
+        type: "Bungalow",
+        bedrooms: 2,
+        bathrooms: 2,
+        area: "1,000 sq ft",
+        features: ["Beach Access", "Deck", "Ocean Breeze", "Pet Friendly"],
+        description: "Charming coastal bungalow just steps from the beach.",
+        tenant: {
+          name: "Maria Garcia",
+          phone: "(555) 789-0123",
+          email: "maria.g@email.com",
+          leaseStart: "2024-05-01",
+          leaseEnd: "2025-04-30"
+        },
+        images: ["https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&h=300&fit=crop"]
+      }
+    ]
+  };
+
+  // Reset to page 1 when switching tabs
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+  };
+
+  // Get current properties based on active tab
+  const currentProperties = properties[activeTab];
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(currentProperties.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedProperties = currentProperties.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const goToPage = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const PropertyCard = ({ property, status }) => (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+      <div className="relative">
+        <img 
+          src={property.images[0]} 
+          alt={property.title}
+          className="w-full h-48 object-cover"
+        />
+        <div className="absolute top-2 right-2">
+          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+            status === 'available' 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {status === 'available' ? 'Available' : 'Rented'}
+          </span>
+        </div>
+      </div>
+      
+      <div className="p-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">{property.title}</h3>
+        
+        <div className="flex items-center text-gray-600 mb-2">
+          <MapPin className="w-4 h-4 mr-1" />
+          <span className="text-sm">{property.address}</span>
+        </div>
+        
+        <div className="flex items-center text-gray-600 mb-3">
+          <DollarSign className="w-4 h-4 mr-1" />
+          <span className="text-lg font-bold text-blue-600">{property.price}</span>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-2 mb-3 text-sm text-gray-600">
+          <div>Type: {property.type}</div>
+          <div>Area: {property.area}</div>
+          <div>Bedrooms: {property.bedrooms}</div>
+          <div>Bathrooms: {property.bathrooms}</div>
+        </div>
+        
+        <p className="text-gray-700 text-sm mb-3">{property.description}</p>
+        
+        <div className="flex flex-wrap gap-1 mb-3">
+          {property.features.map((feature, index) => (
+            <span 
+              key={index}
+              className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+            >
+              {feature}
+            </span>
+          ))}
+        </div>
+        
+        {status === 'rented' && property.tenant && (
+          <div className="border-t pt-3 mt-3">
+            <h4 className="font-semibold text-gray-800 mb-2">Tenant Information</h4>
+            <div className="space-y-1 text-sm text-gray-600">
+              <div className="flex items-center">
+                <User className="w-4 h-4 mr-2" />
+                <span>{property.tenant.name}</span>
+              </div>
+              <div className="flex items-center">
+                <Phone className="w-4 h-4 mr-2" />
+                <span>{property.tenant.phone}</span>
+              </div>
+              <div className="flex items-center">
+                <Mail className="w-4 h-4 mr-2" />
+                <span>{property.tenant.email}</span>
+              </div>
+              <div className="flex items-center">
+                <Calendar className="w-4 h-4 mr-2" />
+                <span>Lease: {property.tenant.leaseStart} to {property.tenant.leaseEnd}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+          <Home className="w-6 h-6 mr-2" />
+          Property Management Dashboard
+        </h1>
+        
+        {/* Tab Navigation */}
+        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+          <button
+            onClick={() => handleTabChange('available')}
+            className={`px-6 py-2 rounded-md font-medium transition-colors duration-200 ${
+              activeTab === 'available'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            Available ({properties.available.length})
+          </button>
+          <button
+            onClick={() => handleTabChange('rented')}
+            className={`px-6 py-2 rounded-md font-medium transition-colors duration-200 ${
+              activeTab === 'rented'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            Rented ({properties.rented.length})
+          </button>
+        </div>
+      </div>
+
+      {/* Properties Count and Pagination Info */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="text-sm text-gray-600">
+          Showing {startIndex + 1}-{Math.min(endIndex, currentProperties.length)} of {currentProperties.length} properties
+        </div>
+        <div className="text-sm text-gray-600">
+          Page {currentPage} of {totalPages}
+        </div>
+      </div>
+
+      {/* Properties Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {paginatedProperties.map((property) => (
+          <PropertyCard 
+            key={property.id} 
+            property={property} 
+            status={activeTab} 
+          />
+        ))}
+      </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center space-x-2">
+          {/* Previous Button */}
+          <button
+            onClick={goToPreviousPage}
+            disabled={currentPage === 1}
+            className={`flex items-center px-4 py-2 border rounded-md transition-colors duration-200 ${
+              currentPage === 1
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+            }`}
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            Previous
+          </button>
+
+          {/* Page Numbers */}
+          <div className="flex space-x-1">
+            {Array.from({ length: totalPages }, (_, index) => {
+              const pageNumber = index + 1;
+              const isCurrentPage = pageNumber === currentPage;
+              
+              return (
+                <button
+                  key={pageNumber}
+                  onClick={() => goToPage(pageNumber)}
+                  className={`px-3 py-2 border rounded-md transition-colors duration-200 ${
+                    isCurrentPage
+                      ? 'bg-blue-500 text-white border-blue-500'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                  }`}
+                >
+                  {pageNumber}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Next Button */}
+          <button
+            onClick={goToNextPage}
+            disabled={currentPage === totalPages}
+            className={`flex items-center px-4 py-2 border rounded-md transition-colors duration-200 ${
+              currentPage === totalPages
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+            }`}
+          >
+            Next
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </button>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {currentProperties.length === 0 && (
+        <div className="text-center py-12">
+          <Home className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500 text-lg">No properties found</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default PropertyStatusTabs;

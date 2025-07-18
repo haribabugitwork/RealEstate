@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
-import background from '../assets/RealEstate_image_home.jpeg';
-import { Eye, EyeOff, Mail, Lock, User, UserCheck } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, UserCheck, Building, Home, ArrowRight } from 'lucide-react';
 
 const AuthComponent = () => {
   const navigate = useNavigate();
@@ -15,6 +14,7 @@ const AuthComponent = () => {
   const [role, setRole] = useState('Agent');
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,120 +43,428 @@ const AuthComponent = () => {
 
   return (
     <div
-      className="d-flex align-items-center justify-content-center vh-100"
+      className="min-vh-100 d-flex align-items-center justify-content-center position-relative"
       style={{
-        backgroundImage: `url(${background})`,
+        background: `linear-gradient(135deg, 
+          rgba(102, 126, 234, 0.9) 0%, 
+          rgba(118, 75, 162, 0.9) 50%,
+          rgba(102, 126, 234, 0.8) 100%
+        ),
+        url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2073&q=80')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed'
       }}
     >
-      <div className="bg-white p-5 rounded shadow" style={{ width: '100%', maxWidth: '400px', opacity: 0.95 }}>
-        <h2 className="text-center mb-4">{isRegistering ? 'Register' : 'Login'}</h2>
-
-        {error && (
-          <div className="alert alert-danger text-center py-2 mb-3">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          {isRegistering && (
-            <div className="mb-3 position-relative">
-              <label className="form-label">Username <span className="text-danger">*</span></label>
-              <User size={18} className="position-absolute top-50 start-0 translate-middle-y ms-2 text-secondary" />
-              <input
-                type="text"
-                className="form-control ps-5"
-                placeholder="Enter username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-            </div>
-          )}
-
-          <div className="mb-3 position-relative">
-            <label className="form-label">Email <span className="text-danger">*</span></label>
-            <Mail size={18} className="position-absolute top-50 start-0 translate-middle-y ms-2 text-secondary" />
-            <input
-              type="email"
-              className="form-control ps-5"
-              placeholder="Enter email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          {isRegistering && (
-            <div className="mb-3 position-relative">
-              <label className="form-label">Role <span className="text-danger">*</span></label>
-              <UserCheck size={18} className="position-absolute top-50 start-0 translate-middle-y ms-2 text-secondary" />
-              <select
-                className="form-select ps-5"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                required
-              >
-                <option value="Agent">Agent</option>
-                <option value="Buyer">Buyer</option>
-                <option value="Seller">Seller</option>
-              </select>
-            </div>
-          )}
-
-          <div className="mb-3 position-relative">
-            <label className="form-label">Password <span className="text-danger">*</span></label>
-            <Lock size={18} className="position-absolute top-50 start-0 translate-middle-y ms-2 text-secondary" />
-            <input
-              type={showPassword ? 'text' : 'password'}
-              className="form-control ps-5 pe-5"
-              placeholder="Enter password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <button
-              type="button"
-              className="btn position-absolute top-50 end-0 translate-middle-y me-2 text-secondary"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-
-          {isRegistering && (
-            <div className="mb-3 position-relative">
-              <label className="form-label">Confirm Password <span className="text-danger">*</span></label>
-              <Lock size={18} className="position-absolute top-50 start-0 translate-middle-y ms-2 text-secondary" />
-              <input
-                type="password"
-                className="form-control ps-5"
-                placeholder="Retype password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </div>
-          )}
-
-          <button type="submit" className="btn btn-primary w-100 mb-3">
-            {isRegistering ? 'Sign Up' : 'Sign In'}
-          </button>
-        </form>
-
-        <p className="text-center mt-3">
-          {isRegistering ? 'Already have an account?' : "Don't have an account?"}{' '}
-          <button
-            type="button"
-            className="btn btn-link p-0"
-            onClick={() => setIsRegistering(!isRegistering)}
-          >
-            {isRegistering ? 'Login' : 'Register'}
-          </button>
-        </p>
+      {/* Animated Background Elements */}
+      <div className="position-absolute w-100 h-100 overflow-hidden">
+        <div 
+          className="position-absolute rounded-circle"
+          style={{
+            width: '300px',
+            height: '300px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            top: '10%',
+            left: '10%',
+            animation: 'float 6s ease-in-out infinite'
+          }}
+        />
+        <div 
+          className="position-absolute rounded-circle"
+          style={{
+            width: '200px',
+            height: '200px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            bottom: '20%',
+            right: '15%',
+            animation: 'float 8s ease-in-out infinite reverse'
+          }}
+        />
       </div>
+
+      <div className="container">
+        <div className="row justify-content-center">
+          <div className="col-12 col-sm-8 col-md-6 col-lg-5 col-xl-4">
+            {/* Main Auth Card */}
+            <div 
+              className="card border-0 shadow-lg"
+              style={{
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(20px)',
+                borderRadius: '25px'
+              }}
+            >
+              {/* Header with Brand */}
+              <div className="card-header border-0 text-center py-4" style={{ background: 'transparent' }}>
+                <div className="d-flex justify-content-center align-items-center mb-3">
+                  <div 
+                    className="rounded-4 d-flex align-items-center justify-content-center me-3"
+                    style={{
+                      width: '60px',
+                      height: '60px',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)'
+                    }}
+                  >
+                    <Building size={30} className="text-white" />
+                  </div>
+                </div>
+                <h3 className="fw-bold mb-2 text-dark">RealEstates</h3>
+                <p className="text-muted mb-0">
+                  {isRegistering ? 'Create your account' : 'Welcome back'}
+                </p>
+              </div>
+
+              <div className="card-body px-4 pb-4">
+                {/* Toggle Tabs */}
+                <div className="d-flex mb-4 p-1 rounded-4" style={{ background: '#f8f9fa' }}>
+                  <button
+                    type="button"
+                    className={`btn flex-fill py-2 border-0 fw-semibold transition-all ${
+                      !isRegistering 
+                        ? 'text-white shadow-sm' 
+                        : 'text-muted bg-transparent'
+                    }`}
+                    style={{
+                      background: !isRegistering 
+                        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+                        : 'transparent',
+                      borderRadius: '12px'
+                    }}
+                    onClick={() => setIsRegistering(false)}
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn flex-fill py-2 border-0 fw-semibold transition-all ${
+                      isRegistering 
+                        ? 'text-white shadow-sm' 
+                        : 'text-muted bg-transparent'
+                    }`}
+                    style={{
+                      background: isRegistering 
+                        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+                        : 'transparent',
+                      borderRadius: '12px'
+                    }}
+                    onClick={() => setIsRegistering(true)}
+                  >
+                    Sign Up
+                  </button>
+                </div>
+
+                {/* Error Alert */}
+                {error && (
+                  <div 
+                    className="alert border-0 text-center py-3 mb-4"
+                    style={{
+                      background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
+                      color: 'white',
+                      borderRadius: '15px'
+                    }}
+                  >
+                    <div className="d-flex align-items-center justify-content-center">
+                      <i className="bi bi-exclamation-triangle me-2"></i>
+                      {error}
+                    </div>
+                  </div>
+                )}
+
+                {/* Form */}
+                <form onSubmit={handleSubmit}>
+                  {isRegistering && (
+                    <div className="mb-4">
+                      <label className="form-label fw-semibold text-dark mb-2">
+                        Username <span className="text-danger">*</span>
+                      </label>
+                      <div className="position-relative">
+                        <User 
+                          size={18} 
+                          className="position-absolute top-50 translate-middle-y text-muted"
+                          style={{ left: '15px', zIndex: 10 }}
+                        />
+                        <input
+                          type="text"
+                          className="form-control border-0 bg-light ps-5 py-3"
+                          placeholder="Enter your username"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          required
+                          style={{
+                            borderRadius: '15px',
+                            fontSize: '15px',
+                            boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mb-4">
+                    <label className="form-label fw-semibold text-dark mb-2">
+                      Email Address <span className="text-danger">*</span>
+                    </label>
+                    <div className="position-relative">
+                      <Mail 
+                        size={18} 
+                        className="position-absolute top-50 translate-middle-y text-muted"
+                        style={{ left: '15px', zIndex: 10 }}
+                      />
+                      <input
+                        type="email"
+                        className="form-control border-0 bg-light ps-5 py-3"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        style={{
+                          borderRadius: '15px',
+                          fontSize: '15px',
+                          boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {isRegistering && (
+                    <div className="mb-4">
+                      <label className="form-label fw-semibold text-dark mb-2">
+                        Role <span className="text-danger">*</span>
+                      </label>
+                      <div className="position-relative">
+                        <UserCheck 
+                          size={18} 
+                          className="position-absolute top-50 translate-middle-y text-muted"
+                          style={{ left: '15px', zIndex: 10 }}
+                        />
+                        <select
+                          className="form-select border-0 bg-light ps-5 py-3"
+                          value={role}
+                          onChange={(e) => setRole(e.target.value)}
+                          required
+                          style={{
+                            borderRadius: '15px',
+                            fontSize: '15px',
+                            boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
+                          }}
+                        >
+                          <option value="Owner">Property Owner</option>
+                          <option value="Agent">Real Estate Agent</option>
+                          <option value="Buyer">Property Buyer</option>
+                          <option value="Seller">Property Seller</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mb-4">
+                    <label className="form-label fw-semibold text-dark mb-2">
+                      Password <span className="text-danger">*</span>
+                    </label>
+                    <div className="position-relative">
+                      <Lock 
+                        size={18} 
+                        className="position-absolute top-50 translate-middle-y text-muted"
+                        style={{ left: '15px', zIndex: 10 }}
+                      />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        className="form-control border-0 bg-light ps-5 pe-5 py-3"
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        style={{
+                          borderRadius: '15px',
+                          fontSize: '15px',
+                          boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="btn position-absolute top-50 end-0 translate-middle-y me-3 p-0 border-0 bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <EyeOff size={18} className="text-muted" /> : <Eye size={18} className="text-muted" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {isRegistering && (
+                    <div className="mb-4">
+                      <label className="form-label fw-semibold text-dark mb-2">
+                        Confirm Password <span className="text-danger">*</span>
+                      </label>
+                      <div className="position-relative">
+                        <Lock 
+                          size={18} 
+                          className="position-absolute top-50 translate-middle-y text-muted"
+                          style={{ left: '15px', zIndex: 10 }}
+                        />
+                        <input
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          className="form-control border-0 bg-light ps-5 pe-5 py-3"
+                          placeholder="Confirm your password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required
+                          style={{
+                            borderRadius: '15px',
+                            fontSize: '15px',
+                            boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="btn position-absolute top-50 end-0 translate-middle-y me-3 p-0 border-0 bg-transparent"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        >
+                          {showConfirmPassword ? <EyeOff size={18} className="text-muted" /> : <Eye size={18} className="text-muted" />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {!isRegistering && (
+                    <div className="d-flex justify-content-between align-items-center mb-4">
+                      <div className="form-check">
+                        <input className="form-check-input" type="checkbox" id="rememberMe" />
+                        <label className="form-check-label text-muted" htmlFor="rememberMe">
+                          Remember me
+                        </label>
+                      </div>
+                      <a href="#" className="text-decoration-none" style={{ color: '#667eea' }}>
+                        Forgot password?
+                      </a>
+                    </div>
+                  )}
+
+                  <button 
+                    type="submit" 
+                    className="btn w-100 py-3 border-0 fw-semibold text-white position-relative overflow-hidden"
+                    style={{
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      borderRadius: '15px',
+                      fontSize: '16px',
+                      boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseOver={(e) => {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 12px 35px rgba(102, 126, 234, 0.4)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.3)';
+                    }}
+                  >
+                    <span className="d-flex align-items-center justify-content-center">
+                      {isRegistering ? 'Create Account' : 'Sign In'}
+                      <ArrowRight size={18} className="ms-2" />
+                    </span>
+                  </button>
+                </form>
+
+                {/* Footer Links */}
+                <div className="text-center mt-4">
+                  <p className="text-muted mb-2">
+                    {isRegistering ? 'Already have an account?' : "Don't have an account?"}
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-link p-0 fw-semibold text-decoration-none"
+                    style={{ color: '#667eea' }}
+                    onClick={() => {
+                      setIsRegistering(!isRegistering);
+                      setError(null);
+                    }}
+                  >
+                    {isRegistering ? 'Sign In Here' : 'Create New Account'}
+                  </button>
+                </div>
+
+                {/* Social Login Options */}
+                <div className="mt-4">
+                  <div className="position-relative text-center mb-3">
+                    <hr className="text-muted" />
+                    <span 
+                      className="position-absolute top-50 start-50 translate-middle px-3 bg-white text-muted small"
+                    >
+                      Or continue with
+                    </span>
+                  </div>
+                  
+                  <div className="row g-2">
+                    <div className="col-6">
+                      <button 
+                        type="button" 
+                        className="btn btn-outline-secondary w-100 py-2 border-2"
+                        style={{ borderRadius: '12px' }}
+                      >
+                        <i className="bi bi-google me-1"></i>
+                        Google
+                      </button>
+                    </div>
+                    <div className="col-6">
+                      <button 
+                        type="button" 
+                        className="btn btn-outline-secondary w-100 py-2 border-2"
+                        style={{ borderRadius: '12px' }}
+                      >
+                        <i className="bi bi-microsoft me-1"></i>
+                        Microsoft
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Info Card */}
+            <div className="text-center mt-4">
+              <div 
+                className="card border-0 py-3 px-4"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '20px'
+                }}
+              >
+                <div className="d-flex align-items-center justify-content-center text-white">
+                  <Home size={18} className="me-2" />
+                  <small className="fw-medium">
+                    Trusted by 10,000+ property professionals worldwide
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Custom CSS for animations */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        
+        .transition-all {
+          transition: all 0.3s ease;
+        }
+        
+        .form-control:focus,
+        .form-select:focus {
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+          border-color: transparent !important;
+        }
+        
+        .btn:focus {
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+        }
+      `}</style>
     </div>
   );
 };

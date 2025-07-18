@@ -4,6 +4,9 @@ import Dashboard from './components/Dashboard';
 import AvailableUnitsTable from './components/AvailableUnitsTable';
 import CSVUploader from './components/CSVUploader';
 import PropertyManager from './components/PropertyManager';
+import PropertyStatusTabs from './components/PropertyStatusTabs';
+import TenantDetails from './components/TenantDetails';
+
 
 // Placeholder for future components:
 // import ViewProperties from './components/ViewProperties';
@@ -18,6 +21,8 @@ function App() {
       <Routes>
         {/* Login route */}
         <Route path="/" element={<LoginComponent />} />
+       
+
 
         {/* Dashboard layout + nested routes */}
         <Route
@@ -25,10 +30,8 @@ function App() {
           element={token ? <Dashboard /> : <Navigate to="/" replace />}
         >
           <Route path="propertyloader" element={<PropertyManager />} />
-          {/* Future content components can go here */}
-          { <Route path="viewproperties" element={<AvailableUnitsTable />} /> }
-          {/* <Route path="tenantdetails" element={<TenantDetails />} /> */}
-          {/* <Route path="contractsexpiry" element={<ContractsExpiry />} /> */}
+          <Route path="viewproperties" element={<PropertyStatusTabs />} />
+          <Route path="tenantdetails"  element={<TenantDetails />} />
         </Route>
       </Routes>
     </BrowserRouter>
