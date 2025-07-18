@@ -96,7 +96,7 @@ const Dashboard = () => {
       // Clear storage and redirect regardless of API call success
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
-      navigate('/auth');
+      navigate('/');
     }
   };
 
@@ -121,14 +121,14 @@ const Dashboard = () => {
       label: "View Tenant Details",
       description: "Tenant management",
       gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
-    },
-    {
+    }
+   /*  {
       to: "tenantPaymentDetails", 
       icon: CreditCard,
       label: "View Tenant Payments",
       description: "Payment tracking",
       gradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
-    }
+    } */
   ];
 
   const isActiveRoute = (path) => {
