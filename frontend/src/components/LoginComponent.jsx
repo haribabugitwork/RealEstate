@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
-import { Eye, EyeOff, Mail, Lock, User, UserCheck, Building, Home, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, UserCheck, Building, Home, ArrowRight, Shield } from 'lucide-react';
 
 const AuthComponent = () => {
   const navigate = useNavigate();
@@ -11,33 +11,90 @@ const AuthComponent = () => {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState('Agent');
+  const [role, setRole] = useState('Tenant'); // Changed to match backend
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Debug state
+  const [debugInfo, setDebugInfo] = useState('');
+
+  const addDebugInfo = (info) => {
+    console.log('Debug:', info);
+    setDebugInfo(prev => prev + '\n' + new Date().toLocaleTimeString() + ': ' + info);
+  };
+
+  const handleSendOtp = async () => {
+    if (!email) {
+      setError('Please enter your email address');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    addDebugInfo(`Sending OTP to: ${email}`);
+
+    try {
+      const res = await axios.post('/auth/send-otp', { email });
+      addDebugInfo(`OTP Send Response: ${JSON.stringify(res.data)}`);
+      
+      // Navigate to dedicated OTP verification page
+      navigate('/otp-verification', { state: { email } });
+      
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || 'Failed to send OTP';
+      addDebugInfo(`OTP Send Error: ${errorMsg}`);
+      setError(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
 
     if (isRegistering && password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
+    setLoading(true);
+    addDebugInfo(`${isRegistering ? 'Registration' : 'Login'} attempt for: ${email}`);
+
     try {
       if (isRegistering) {
-        const res = await axios.post('/auth/register', { email, password, role });
-        if (res.data.message === "User registered") setIsRegistering(false);
+        const res = await axios.post('/auth/register', { 
+          email, 
+          password, 
+          username, 
+          role 
+        });
+        addDebugInfo(`Registration Response: ${JSON.stringify(res.data)}`);
+        
+        if (res.data.message === "User registered") {
+          setSuccess('Registration successful! Please sign in.');
+          setIsRegistering(false);
+        }
       } else {
+        // Traditional login
         const res = await axios.post('/auth/login', { email, password });
+        addDebugInfo(`Login Response: ${JSON.stringify(res.data)}`);
+        
         const { token, refreshToken } = res.data;
         localStorage.setItem('token', token);
         localStorage.setItem('refreshToken', refreshToken);
         navigate('/dashboard');
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Something went wrong');
+      const errorMsg = err.response?.data?.error || 'Something went wrong';
+      addDebugInfo(`${isRegistering ? 'Registration' : 'Login'} Error: ${errorMsg}`);
+      setError(errorMsg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -57,6 +114,24 @@ const AuthComponent = () => {
         backgroundAttachment: 'fixed'
       }}
     >
+      {/* Debug Panel - Remove in production */}
+      {process.env.NODE_ENV === 'development' && (
+        <div 
+          className="position-fixed top-0 end-0 bg-dark text-white p-2 m-2 rounded"
+          style={{ 
+            width: '300px', 
+            height: '200px', 
+            fontSize: '10px', 
+            overflow: 'auto',
+            zIndex: 9999,
+            opacity: 0.8
+          }}
+        >
+          <strong>Debug Log:</strong>
+          <pre>{debugInfo}</pre>
+        </div>
+      )}
+
       {/* Animated Background Elements */}
       <div className="position-absolute w-100 h-100 overflow-hidden">
         <div 
@@ -155,6 +230,23 @@ const AuthComponent = () => {
                   </button>
                 </div>
 
+                {/* Success Alert */}
+                {success && (
+                  <div 
+                    className="alert border-0 text-center py-3 mb-4"
+                    style={{
+                      background: 'linear-gradient(135deg, #51cf66 0%, #40c057 100%)',
+                      color: 'white',
+                      borderRadius: '15px'
+                    }}
+                  >
+                    <div className="d-flex align-items-center justify-content-center">
+                      <i className="bi bi-check-circle me-2"></i>
+                      {success}
+                    </div>
+                  </div>
+                )}
+
                 {/* Error Alert */}
                 {error && (
                   <div 
@@ -172,7 +264,7 @@ const AuthComponent = () => {
                   </div>
                 )}
 
-                {/* Form */}
+                {/* Login/Register Form */}
                 <form onSubmit={handleSubmit}>
                   {isRegistering && (
                     <div className="mb-4">
@@ -252,8 +344,7 @@ const AuthComponent = () => {
                         >
                           <option value="Owner">Property Owner</option>
                           <option value="Agent">Real Estate Agent</option>
-                          <option value="Buyer">Property Buyer</option>
-                          <option value="Seller">Property Seller</option>
+                          <option value="Tenant">Property Tenant</option>
                         </select>
                       </div>
                     </div>
@@ -343,28 +434,66 @@ const AuthComponent = () => {
 
                   <button 
                     type="submit" 
-                    className="btn w-100 py-3 border-0 fw-semibold text-white position-relative overflow-hidden"
+                    disabled={loading}
+                    className="btn w-100 py-3 border-0 fw-semibold text-white position-relative overflow-hidden mb-3"
                     style={{
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      background: loading 
+                        ? '#dee2e6' 
+                        : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       borderRadius: '15px',
                       fontSize: '16px',
                       boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
                       transition: 'all 0.3s ease'
                     }}
-                    onMouseOver={(e) => {
-                      e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 12px 35px rgba(102, 126, 234, 0.4)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.3)';
-                    }}
                   >
                     <span className="d-flex align-items-center justify-content-center">
-                      {isRegistering ? 'Create Account' : 'Sign In'}
-                      <ArrowRight size={18} className="ms-2" />
+                      {loading ? (
+                        <>
+                          <div className="spinner-border spinner-border-sm me-2" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                          </div>
+                          {isRegistering ? 'Creating...' : 'Signing In...'}
+                        </>
+                      ) : (
+                        <>
+                          {isRegistering ? 'Create Account' : 'Sign In'}
+                          <ArrowRight size={18} className="ms-2" />
+                        </>
+                      )}
                     </span>
                   </button>
+
+                  {/* OTP Login Option - Only for non-registration */}
+                  {!isRegistering && (
+                    <button
+                      type="button"
+                      onClick={handleSendOtp}
+                      disabled={loading || !email}
+                      className="btn btn-outline-primary w-100 py-3 border-2 fw-semibold mb-4"
+                      style={{
+                        borderRadius: '15px',
+                        fontSize: '16px',
+                        borderColor: '#667eea',
+                        color: '#667eea'
+                      }}
+                    >
+                      <span className="d-flex align-items-center justify-content-center">
+                        {loading ? (
+                          <>
+                            <div className="spinner-border spinner-border-sm me-2" role="status">
+                              <span className="visually-hidden">Loading...</span>
+                            </div>
+                            Sending OTP...
+                          </>
+                        ) : (
+                          <>
+                            <Shield size={18} className="me-2" />
+                            Login with OTP
+                          </>
+                        )}
+                      </span>
+                    </button>
+                  )}
                 </form>
 
                 {/* Footer Links */}
@@ -379,6 +508,7 @@ const AuthComponent = () => {
                     onClick={() => {
                       setIsRegistering(!isRegistering);
                       setError(null);
+                      setSuccess(null);
                     }}
                   >
                     {isRegistering ? 'Sign In Here' : 'Create New Account'}

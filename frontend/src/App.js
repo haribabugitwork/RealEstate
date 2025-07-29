@@ -6,7 +6,7 @@ import CSVUploader from './components/CSVUploader';
 import PropertyManager from './components/PropertyManager';
 import PropertyStatusTabs from './components/PropertyStatusTabs';
 import TenantDetails from './components/TenantDetails';
-
+import OTPVerification from './components/OTPVerification';
 
 // Placeholder for future components:
 // import ViewProperties from './components/ViewProperties';
@@ -21,9 +21,11 @@ function App() {
       <Routes>
         {/* Login route */}
         <Route path="/" element={<LoginComponent />} />
-       
-
-
+        <Route path="/auth" element={<LoginComponent />} />
+        
+        {/* OTP Verification route - TOP LEVEL, not nested */}
+        <Route path="/otp-verification" element={<OTPVerification />} />
+        
         {/* Dashboard layout + nested routes */}
         <Route
           path="/dashboard"
@@ -31,7 +33,7 @@ function App() {
         >
           <Route path="propertyloader" element={<PropertyManager />} />
           <Route path="viewproperties" element={<PropertyStatusTabs />} />
-          <Route path="tenantdetails"  element={<TenantDetails />} />
+          <Route path="tenantdetails" element={<TenantDetails />} />
         </Route>
       </Routes>
     </BrowserRouter>

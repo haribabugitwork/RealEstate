@@ -1,433 +1,414 @@
+// src/components/OTPVerification.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from '../api/axios';
-import { Mail, Shield, CheckCircle, RefreshCw, ArrowLeft, Building, Timer } from 'lucide-react';
+import {
+  Mail,
+  Shield,
+  CheckCircle,
+  RefreshCw,
+  ArrowLeft,
+  Building,
+  Timer
+} from 'lucide-react';
+import '../styles/OTPVerification.css';
 
-const OTPVerification = () => {
+export default function OTPVerification() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [email, setEmail] = useState(location.state?.email || '');
+  const email = useLocation().state?.email || '';
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isResending, setIsResending] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [canResend, setCanResend] = useState(false);
+  const [seconds, setSeconds] = useState(300);
+  
+  // Single string state instead of array - this often fixes display issues
+  const [otpValue, setOtpValue] = useState('');
   const inputRefs = useRef([]);
+  const isUpdatingRef = useRef(false);
+  const isSubmittingRef = useRef(false);  // Add this to prevent double submissions
 
-  // Timer countdown
+  // Countdown timer
   useEffect(() => {
-    if (timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timer);
-    } else {
+    if (seconds <= 0) {
       setCanResend(true);
+      return;
     }
-  }, [timeLeft]);
+    const timer = setTimeout(() => setSeconds(s => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [seconds]);
 
-  // Auto-focus next input
-  const handleOtpChange = (index, value) => {
-    if (value.length > 1) return;
+  // Auto-focus first input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (inputRefs.current[0]) {
+        inputRefs.current[0].focus();
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Auto-submit when complete - DISABLED to prevent double submissions
+  // useEffect(() => {
+  //   if (otpValue.length === 6 && !loading && !isSubmittingRef.current) {
+  //     console.log('Auto-submit triggered for OTP:', otpValue);
+  //     const timer = setTimeout(() => {
+  //       if (!isSubmittingRef.current) {  // Double-check before submitting
+  //         handleSubmit(otpValue);
+  //       }
+  //     }, 300);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [otpValue, loading]);
+
+  // Get individual digit for display
+  const getDigit = (index) => {
+    return otpValue[index] || '';
+  };
+
+  // Handle input change - much simpler approach
+  const handleInputChange = (index, value) => {
+    if (loading || resending) return;
     
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
+    console.log(`Input ${index} changed to: "${value}"`);
+    
+    // Get just the numeric part
+    const numericValue = value.replace(/\D/g, '');
+    const digit = numericValue.slice(-1); // Last digit entered
+    
+    console.log(`Processed digit: "${digit}"`);
+    
+    // Build new OTP value
+    const currentArray = Array.from({length: 6}, (_, i) => otpValue[i] || '');
+    currentArray[index] = digit;
+    const newOtpValue = currentArray.join('').replace(/\s+/g, '');
+    
+    console.log(`New OTP value: "${newOtpValue}"`);
+    setOtpValue(newOtpValue);
     setError('');
 
-    // Auto focus next input
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-
-    // Auto submit when all fields filled
-    if (newOtp.every(digit => digit !== '') && newOtp.join('').length === 6) {
-      handleVerifyOTP(newOtp.join(''));
+    // Move to next input if we have a digit and not at last position
+    if (digit && index < 5) {
+      setTimeout(() => {
+        if (inputRefs.current[index + 1]) {
+          inputRefs.current[index + 1].focus();
+          inputRefs.current[index + 1].select();
+        }
+      }, 50);
     }
   };
 
-  // Handle backspace
+  // Handle backspace and navigation
   const handleKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
+    console.log(`Key pressed: ${e.key} at index ${index}`);
+    
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      
+      const currentArray = Array.from({length: 6}, (_, i) => otpValue[i] || '');
+      
+      if (currentArray[index]) {
+        // Clear current digit
+        currentArray[index] = '';
+        setOtpValue(currentArray.join('').replace(/\s+/g, ''));
+      } else if (index > 0) {
+        // Move to previous and clear
+        currentArray[index - 1] = '';
+        setOtpValue(currentArray.join('').replace(/\s+/g, ''));
+        
+        setTimeout(() => {
+          if (inputRefs.current[index - 1]) {
+            inputRefs.current[index - 1].focus();
+            inputRefs.current[index - 1].select();
+          }
+        }, 50);
+      }
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      e.preventDefault();
+      setTimeout(() => {
+        if (inputRefs.current[index - 1]) {
+          inputRefs.current[index - 1].focus();
+          inputRefs.current[index - 1].select();
+        }
+      }, 10);
+    } else if (e.key === 'ArrowRight' && index < 5) {
+      e.preventDefault();
+      setTimeout(() => {
+        if (inputRefs.current[index + 1]) {
+          inputRefs.current[index + 1].focus();
+          inputRefs.current[index + 1].select();
+        }
+      }, 10);
     }
   };
 
   // Handle paste
   const handlePaste = (e) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').slice(0, 6);
-    if (/^\d+$/.test(pastedData)) {
-      const newOtp = pastedData.split('').concat(Array(6).fill('')).slice(0, 6);
-      setOtp(newOtp);
-      if (pastedData.length === 6) {
-        handleVerifyOTP(pastedData);
-      }
+    const pastedText = e.clipboardData.getData('text');
+    const digits = pastedText.replace(/\D/g, '').slice(0, 6);
+    
+    console.log(`Pasted: "${digits}"`);
+    
+    if (digits.length > 0) {
+      setOtpValue(digits);
+      
+      // Focus appropriate input
+      const nextIndex = Math.min(digits.length, 5);
+      setTimeout(() => {
+        if (inputRefs.current[nextIndex]) {
+          inputRefs.current[nextIndex].focus();
+        }
+      }, 10);
     }
   };
 
-  // Verify OTP
-  const handleVerifyOTP = async (otpCode = otp.join('')) => {
-    if (otpCode.length !== 6) {
-      setError('Please enter the complete 6-digit code');
+  // Submit OTP
+  const handleSubmit = async (code = null) => {
+    // Prevent double submissions
+    if (isSubmittingRef.current) {
+      console.log('Submission already in progress, skipping...');
+      return;
+    }
+    
+    const submitCode = code || otpValue;
+    
+    if (submitCode.length !== 6) {
+      setError('Please enter all 6 digits');
       return;
     }
 
-    setIsLoading(true);
+    isSubmittingRef.current = true;  // Set submission flag
+    setLoading(true);
     setError('');
 
     try {
-      const response = await axios.post('/auth/verify-otp', {
-        email: email,
-        otp: otpCode
-      });
-
-      setSuccess('Email verified successfully!');
+      console.log('Submitting OTP:', submitCode);
+      console.log('Email for verification:', email);
       
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        navigate('/auth', { 
-          state: { 
-            message: 'Email verified! You can now sign in.',
-            email: email 
-          }
-        });
-      }, 2000);
-
+      // Add more detailed request logging
+      const requestData = { 
+        email, 
+        otp: submitCode 
+      };
+      console.log('Request data:', requestData);
+      
+      // Create a new axios instance without interceptors for OTP verification
+      const cleanAxios = axios.create({
+        baseURL: axios.defaults.baseURL || 'http://localhost:9000/api',
+        timeout: axios.defaults.timeout || 10000,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Clean axios baseURL:', cleanAxios.defaults.baseURL);
+      console.log('Making OTP request without interceptors...');
+      const { data } = await cleanAxios.post('/auth/verify-otp', requestData);
+      
+      console.log('Verification successful:', data);
+      setSuccess('✔️ Email verified!');
+      
+      // Clear any existing tokens before setting new ones
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      
+      // Set new tokens
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('refreshToken', data.refreshToken);
+      
+      console.log('Tokens stored, navigating to dashboard...');
+      setTimeout(() => navigate('/dashboard'), 1500);
     } catch (err) {
-      setError(err.response?.data?.error || 'Invalid verification code');
-      setOtp(['', '', '', '', '', '']);
-      inputRefs.current[0]?.focus();
+      console.error('OTP Verification Error:', err);
+      console.error('Error response data:', err.response?.data);
+      console.error('Error response full:', err.response);
+      console.error('Error status:', err.response?.status);
+      console.error('Error message:', err.message);
+      
+      // Log the actual error message from server
+      if (err.response?.data) {
+        console.error('Server error details:', JSON.stringify(err.response.data, null, 2));
+      }
+      
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message || 'Invalid code. Please try again.';
+      
+      // Show specific error message based on server response
+      if (errorMessage.includes('expired') || errorMessage.includes('Invalid or expired')) {
+        setError('🕒 OTP has expired or already been used. Please request a new code.');
+      } else {
+        setError(errorMessage);
+      }
+      
+      // Clear and refocus
+      setOtpValue('');
+      setTimeout(() => {
+        if (inputRefs.current[0]) {
+          inputRefs.current[0].focus();
+        }
+      }, 100);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+      isSubmittingRef.current = false;  // Reset submission flag
     }
   };
 
   // Resend OTP
-  const handleResendOTP = async () => {
-    setIsResending(true);
-    setError('');
+  const handleResend = async () => {
+    if (resending) return;
     
+    setResending(true);
+    setError('');
+
     try {
-      await axios.post('/auth/resend-otp', { email });
-      setSuccess('New verification code sent to your email!');
-      setTimeLeft(300);
+      // Create clean axios instance for resend as well
+      const cleanAxios = axios.create({
+        baseURL: axios.defaults.baseURL || 'http://localhost:9000/api',
+        timeout: axios.defaults.timeout || 10000,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      await cleanAxios.post('/auth/send-otp', { email });
+      setSuccess('🔁 New code sent! Check your email.');
       setCanResend(false);
-      setOtp(['', '', '', '', '', '']);
-      inputRefs.current[0]?.focus();
+      setSeconds(300);
+      setOtpValue('');
+      
+      setTimeout(() => {
+        setSuccess('');
+        if (inputRefs.current[0]) {
+          inputRefs.current[0].focus();
+        }
+      }, 2000);
     } catch (err) {
+      console.error('Resend OTP Error:', err);
       setError(err.response?.data?.error || 'Failed to resend code');
     } finally {
-      setIsResending(false);
+      setResending(false);
     }
   };
 
   // Format time
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const formatTime = (totalSeconds) => {
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
+  // Debug current state
+  useEffect(() => {
+    console.log('Current OTP state:', {
+      otpValue: otpValue,
+      length: otpValue.length,
+      digits: otpValue.split('').map((d, i) => `${i}: "${d}"`),
+      displayValues: Array.from({length: 6}, (_, i) => `${i}: "${getDigit(i)}"`)
+    });
+  }, [otpValue]);
+
   return (
-    <div
-      className="min-vh-100 d-flex align-items-center justify-content-center position-relative"
-      style={{
-        background: `linear-gradient(135deg, 
-          rgba(102, 126, 234, 0.9) 0%, 
-          rgba(118, 75, 162, 0.9) 50%,
-          rgba(102, 126, 234, 0.8) 100%
-        ),
-        url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2073&q=80')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed'
-      }}
-    >
-      {/* Animated Background Elements */}
-      <div className="position-absolute w-100 h-100 overflow-hidden">
-        <div 
-          className="position-absolute rounded-circle"
-          style={{
-            width: '250px',
-            height: '250px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            top: '15%',
-            left: '15%',
-            animation: 'float 6s ease-in-out infinite'
-          }}
-        />
-        <div 
-          className="position-absolute rounded-circle"
-          style={{
-            width: '180px',
-            height: '180px',
-            background: 'rgba(255, 255, 255, 0.05)',
-            bottom: '25%',
-            right: '20%',
-            animation: 'float 8s ease-in-out infinite reverse'
-          }}
-        />
-      </div>
-
-      <div className="container">
-        <div className="row justify-content-center">
-          <div className="col-12 col-sm-8 col-md-6 col-lg-5 col-xl-4">
-            {/* Main Verification Card */}
-            <div 
-              className="card border-0 shadow-lg"
-              style={{
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(20px)',
-                borderRadius: '25px'
-              }}
-            >
-              {/* Header */}
-              <div className="card-header border-0 text-center py-4" style={{ background: 'transparent' }}>
-                <div className="d-flex justify-content-center align-items-center mb-3">
-                  <div 
-                    className="rounded-4 d-flex align-items-center justify-content-center"
-                    style={{
-                      width: '80px',
-                      height: '80px',
-                      background: success 
-                        ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                        : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)'
-                    }}
-                  >
-                    {success ? (
-                      <CheckCircle size={40} className="text-white" />
-                    ) : (
-                      <Shield size={40} className="text-white" />
-                    )}
-                  </div>
-                </div>
-                <h3 className="fw-bold mb-2 text-dark">
-                  {success ? 'Verification Complete!' : 'Verify Your Email'}
-                </h3>
-                <p className="text-muted mb-0 px-3">
-                  {success 
-                    ? 'Your email has been successfully verified'
-                    : `We've sent a 6-digit verification code to`
-                  }
-                </p>
-                {!success && (
-                  <p className="fw-semibold text-primary mb-0">{email}</p>
-                )}
-              </div>
-
-              <div className="card-body px-4 pb-4">
-                {/* Success Message */}
-                {success && (
-                  <div 
-                    className="alert border-0 text-center py-3 mb-4"
-                    style={{
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                      color: 'white',
-                      borderRadius: '15px'
-                    }}
-                  >
-                    <div className="d-flex align-items-center justify-content-center">
-                      <CheckCircle size={18} className="me-2" />
-                      {success}
-                    </div>
-                  </div>
-                )}
-
-                {/* Error Message */}
-                {error && (
-                  <div 
-                    className="alert border-0 text-center py-3 mb-4"
-                    style={{
-                      background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
-                      color: 'white',
-                      borderRadius: '15px'
-                    }}
-                  >
-                    <div className="d-flex align-items-center justify-content-center">
-                      <Mail size={18} className="me-2" />
-                      {error}
-                    </div>
-                  </div>
-                )}
-
-                {!success && (
-                  <>
-                    {/* OTP Input Fields */}
-                    <div className="mb-4">
-                      <label className="form-label fw-semibold text-dark mb-3 text-center d-block">
-                        Enter Verification Code
-                      </label>
-                      <div className="d-flex justify-content-center gap-2 mb-3">
-                        {otp.map((digit, index) => (
-                          <input
-                            key={index}
-                            ref={(el) => (inputRefs.current[index] = el)}
-                            type="text"
-                            maxLength="1"
-                            value={digit}
-                            onChange={(e) => handleOtpChange(index, e.target.value)}
-                            onKeyDown={(e) => handleKeyDown(index, e)}
-                            onPaste={handlePaste}
-                            className="form-control text-center fw-bold border-0 bg-light"
-                            style={{
-                              width: '50px',
-                              height: '60px',
-                              borderRadius: '15px',
-                              fontSize: '24px',
-                              boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)',
-                              transition: 'all 0.3s ease'
-                            }}
-                            disabled={isLoading}
-                          />
-                        ))}
-                      </div>
-                      <p className="text-muted text-center small mb-0">
-                        Enter the 6-digit code sent to your email
-                      </p>
-                    </div>
-
-                    {/* Timer and Resend */}
-                    <div className="text-center mb-4">
-                      {!canResend ? (
-                        <div className="d-flex align-items-center justify-content-center text-muted">
-                          <Timer size={16} className="me-2" />
-                          <span>Resend code in {formatTime(timeLeft)}</span>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          className="btn btn-link p-0 fw-semibold text-decoration-none d-flex align-items-center justify-content-center"
-                          style={{ color: '#667eea' }}
-                          onClick={handleResendOTP}
-                          disabled={isResending}
-                        >
-                          {isResending ? (
-                            <>
-                              <RefreshCw size={16} className="me-2 spinner-border spinner-border-sm" />
-                              Sending...
-                            </>
-                          ) : (
-                            <>
-                              <RefreshCw size={16} className="me-2" />
-                              Resend Verification Code
-                            </>
-                          )}
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Verify Button */}
-                    <button 
-                      type="button"
-                      onClick={() => handleVerifyOTP()}
-                      disabled={isLoading || otp.some(digit => digit === '')}
-                      className="btn w-100 py-3 border-0 fw-semibold text-white position-relative overflow-hidden mb-3"
-                      style={{
-                        background: isLoading || otp.some(digit => digit === '') 
-                          ? '#6c757d' 
-                          : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        borderRadius: '15px',
-                        fontSize: '16px',
-                        boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
-                        transition: 'all 0.3s ease'
-                      }}
-                    >
-                      {isLoading ? (
-                        <span className="d-flex align-items-center justify-content-center">
-                          <div className="spinner-border spinner-border-sm me-2" role="status">
-                            <span className="visually-hidden">Loading...</span>
-                          </div>
-                          Verifying...
-                        </span>
-                      ) : (
-                        <span className="d-flex align-items-center justify-content-center">
-                          <Shield size={18} className="me-2" />
-                          Verify Email
-                        </span>
-                      )}
-                    </button>
-                  </>
-                )}
-
-                {/* Back to Login */}
-                <div className="text-center">
-                  <button
-                    type="button"
-                    className="btn btn-link p-0 fw-semibold text-decoration-none d-flex align-items-center justify-content-center"
-                    style={{ color: '#667eea' }}
-                    onClick={() => navigate('/auth')}
-                  >
-                    <ArrowLeft size={16} className="me-2" />
-                    Back to Login
-                  </button>
-                </div>
-
-                {/* Help Text */}
-                <div className="mt-4 p-3 rounded-3" style={{ background: '#f8f9fa' }}>
-                  <h6 className="fw-semibold mb-2 text-dark">
-                    <Mail size={16} className="me-2" />
-                    Didn't receive the code?
-                  </h6>
-                  <ul className="small text-muted mb-0 ps-3">
-                    <li>Check your spam/junk folder</li>
-                    <li>Make sure {email} is correct</li>
-                    <li>Wait a few minutes for the email to arrive</li>
-                    <li>Click "Resend" if the timer expires</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* Security Notice */}
-            <div className="text-center mt-4">
-              <div 
-                className="card border-0 py-3 px-4"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: '20px'
-                }}
-              >
-                <div className="d-flex align-items-center justify-content-center text-white">
-                  <Building size={18} className="me-2" />
-                  <small className="fw-medium">
-                    🔒 Your security is our priority - RealEstates
-                  </small>
-                </div>
-              </div>
-            </div>
+    <div className="otp-page">
+      <div className="otp-card">
+        {/* Header */}
+        <div className="otp-header">
+          <div className="otp-icon">
+            {success ? <CheckCircle size={40}/> : <Shield size={40}/>}
           </div>
+          <h3>{success || 'Verify Your Email'}</h3>
+          {!success && <p>Enter the 6-digit code sent to <b>{email}</b></p>}
+        </div>
+
+        {/* Body */}
+        <div className="otp-body">
+          {error && (
+            <div className="alert error">
+              <Mail size={18}/> {error}
+            </div>
+          )}
+          
+          {success && (
+            <div className="alert success">
+              <CheckCircle size={18}/> {success}
+            </div>
+          )}
+
+          {!success && (
+            <>
+              <div className="otp-inputs">
+                {Array.from({length: 6}, (_, index) => (
+                  <input
+                    key={`otp-input-${index}`}
+                    ref={el => inputRefs.current[index] = el}
+                    className="otp-input"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={1}
+                    value={getDigit(index)}
+                    disabled={loading || resending}
+                    onChange={(e) => {
+                      console.log(`onChange fired for index ${index}, value: "${e.target.value}"`);
+                      handleInputChange(index, e.target.value);
+                    }}
+                    onKeyDown={(e) => handleKeyDown(index, e)}
+                    onPaste={index === 0 ? handlePaste : null}
+                    onFocus={(e) => {
+                      console.log(`Input ${index} focused`);
+                      e.target.select();
+                    }}
+                    autoComplete="one-time-code"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                  />
+                ))}
+              </div>
+
+              <div className="otp-resend">
+                {canResend ? (
+                  <button 
+                    onClick={handleResend} 
+                    disabled={resending}
+                    type="button"
+                  >
+                    <RefreshCw size={16}/> 
+                    {resending ? ' Sending…' : ' Resend Code'}
+                  </button>
+                ) : (
+                  <span>
+                    <Timer size={16}/> {formatTime(seconds)}
+                  </span>
+                )}
+              </div>
+
+              <button
+                className="otp-verify-btn"
+                onClick={() => handleSubmit()}
+                disabled={loading || resending}
+                type="button"
+              >
+                {loading ? 'Verifying…' : 'Verify Email'}
+              </button>
+            </>
+          )}
+
+          <button 
+            className="back-btn" 
+            onClick={() => navigate('/auth')}
+            type="button"
+          >
+            <ArrowLeft size={16}/> Back to Login
+          </button>
+        </div>
+
+        {/* Footer */}
+        <div className="otp-footer">
+          <Building size={18}/> 
+          <small>🔒 Secured by RealEstates</small>
         </div>
       </div>
-
-      {/* Custom CSS for animations */}
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
-        
-        .form-control:focus {
-          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3) !important;
-          border-color: transparent !important;
-          transform: scale(1.05);
-        }
-        
-        .btn:not(:disabled):hover {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4) !important;
-        }
-        
-        .spinner-border-sm {
-          width: 1rem;
-          height: 1rem;
-        }
-      `}</style>
     </div>
   );
-};
-
-export default OTPVerification;
+}

@@ -26,8 +26,14 @@ app.use((req, res, next) => {
   express.json()(req, res, next);
 });
 
-// Rate limiting (uncomment if needed)
-// app.use(rateLimit({ windowMs: 60_000, max: 60 }));
+// Rate limiting for OTP endpoints
+const otpRateLimit = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5, // 5 OTP requests per minute per IP
+  message: { error: 'Too many OTP requests. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -141,54 +147,85 @@ const createProxyOptions = (target, pathRewrite, routeName) => ({
   }
 });
 
-// 1) Public auth routes
+// =================================================================
+// PUBLIC AUTH ROUTES (NO AUTHENTICATION REQUIRED)
+// =================================================================
+
+// 1) Registration
 app.post('/api/auth/register', 
   createProxyMiddleware(createProxyOptions(AUTH_URL, { '^/api/auth/register': '/auth/register' }, 'AUTH_REGISTER'))
 );
 
+// 2) Traditional login
 app.post('/api/auth/login', 
   createProxyMiddleware(createProxyOptions(AUTH_URL, { '^/api/auth/login': '/auth/login' }, 'AUTH_LOGIN'))
 );
 
+// 3) OTP send (NEW - with rate limiting)
+app.post('/api/auth/send-otp', 
+  otpRateLimit,
+  createProxyMiddleware(createProxyOptions(AUTH_URL, { '^/api/auth/send-otp': '/auth/send-otp' }, 'AUTH_SEND_OTP'))
+);
+
+// 4) OTP verify (NEW)
+app.post('/api/auth/verify-otp', 
+  createProxyMiddleware(createProxyOptions(AUTH_URL, { '^/api/auth/verify-otp': '/auth/verify-otp' }, 'AUTH_VERIFY_OTP'))
+);
+
+// 5) OTP resend (NEW - with rate limiting)
+app.post('/api/auth/resend-otp', 
+  otpRateLimit,
+  createProxyMiddleware(createProxyOptions(AUTH_URL, { '^/api/auth/resend-otp': '/auth/resend-otp' }, 'AUTH_RESEND_OTP'))
+);
+
+// 6) Token refresh
 app.post('/api/auth/refresh', 
   createProxyMiddleware(createProxyOptions(AUTH_URL, { '^/api/auth/refresh': '/auth/refresh' }, 'AUTH_REFRESH'))
 );
 
-// 2) Protected auth
+// =================================================================
+// PROTECTED ROUTES (AUTHENTICATION REQUIRED)
+// =================================================================
+
+// 7) Protected auth routes (anything else under /api/auth)
 app.use('/api/auth',
   authenticate,
   createProxyMiddleware(createProxyOptions(AUTH_URL, { '^/api/auth': '/auth' }, 'AUTH_PROTECTED'))
 );
 
-// 3) Property (supports file uploads)
+// 8) Property (supports file uploads)
 app.use('/api/property',
   authenticate,
   createProxyMiddleware(createProxyOptions(PROPERTY_URL, { '^/api/property': '' }, 'PROPERTY'))
 );
 
-// 4) Allocation
+// 9) Allocation
 app.use('/api/allocation',
   authenticate,
   createProxyMiddleware(createProxyOptions(ALLOC_URL, { '^/api/allocation': '' }, 'ALLOCATION'))
 );
 
-// 5) Payments
+// 10) Payments
 app.use('/api/payments',
   authenticate,
   createProxyMiddleware(createProxyOptions(PAY_URL, { '^/api/payments': '' }, 'PAYMENTS'))
 );
 
-// 6) Complaints
+// 11) Complaints
 app.use('/api/complaints',
   authenticate,
   createProxyMiddleware(createProxyOptions(COMP_URL, { '^/api/complaints': '' }, 'COMPLAINTS'))
 );
 
-// 7) Company
+// 12) Company
 app.use('/api/company',
   authenticate,
   createProxyMiddleware(createProxyOptions(COMPANY_URL, { '^/api/company': '' }, 'COMPANY'))
 );
+
+// =================================================================
+// ERROR HANDLING
+// =================================================================
 
 // Error handler
 app.use((err, req, res, next) => {
@@ -201,21 +238,48 @@ app.use((err, req, res, next) => {
 // 404 handler
 app.use((req, res) => {
   console.log(`404 - Route not found: ${req.method} ${req.path}`);
-  res.status(404).json({ error: 'Route not found' });
+  res.status(404).json({ 
+    error: 'Route not found',
+    availableRoutes: [
+      'POST /api/auth/register',
+      'POST /api/auth/login',
+      'POST /api/auth/send-otp',
+      'POST /api/auth/verify-otp',
+      'POST /api/auth/resend-otp',
+      'POST /api/auth/refresh',
+      '* /api/auth/* (protected)',
+      '* /api/property/* (protected)',
+      '* /api/allocation/* (protected)',
+      '* /api/payments/* (protected)',
+      '* /api/complaints/* (protected)',
+      '* /api/company/* (protected)'
+    ]
+  });
 });
+
+// =================================================================
+// SERVER STARTUP
+// =================================================================
 
 // Listen
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`API Gateway running on port ${PORT}`);
-  console.log('Available routes:');
+  console.log('='.repeat(60));
+  console.log('📧 PUBLIC AUTH ROUTES (No Authentication):');
   console.log('  POST /api/auth/register');
   console.log('  POST /api/auth/login');
+  console.log('  POST /api/auth/send-otp     ⭐ NEW OTP ROUTE');
+  console.log('  POST /api/auth/verify-otp   ⭐ NEW OTP ROUTE');
+  console.log('  POST /api/auth/resend-otp   ⭐ NEW OTP ROUTE');
   console.log('  POST /api/auth/refresh');
-  console.log('  * /api/auth/* (protected)');
-  console.log('  * /api/property/* (protected) - supports file uploads');
-  console.log('  * /api/allocation/* (protected)');
-  console.log('  * /api/payments/* (protected)');
-  console.log('  * /api/complaints/* (protected)');
-  console.log('  * /api/company/* (protected)');
+  console.log('');
+  console.log('🔒 PROTECTED ROUTES (Authentication Required):');
+  console.log('  * /api/auth/* (other auth endpoints)');
+  console.log('  * /api/property/* (supports file uploads)');
+  console.log('  * /api/allocation/*');
+  console.log('  * /api/payments/*');
+  console.log('  * /api/complaints/*');
+  console.log('  * /api/company/*');
+  console.log('='.repeat(60));
 });
